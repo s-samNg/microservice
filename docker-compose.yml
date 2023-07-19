@@ -1,0 +1,56 @@
+version: '3'
+# Définit la version de la syntaxe Docker Compose utilisée dans ce fichier.
+
+services:
+  # Configuration du service 'api'
+  api:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+      # Construit l'image du service à partir du Dockerfile situé dans le répertoire './api-gateway'.
+    container_name: api
+    # Donne un nom personnalisé au conteneur pour référencer facilement.
+    ports: 
+      - 3000:3000
+      # Mappe le port 3000 du conteneur sur le port 3000 de l'hôte.
+    volumes:
+      - /api/node_modules
+        # Crée un volume pour préserver les dépendances Node.js entre les redémarrages du conteneur.
+      - ./api-gateway:/api
+        # Montage d'un volume pour permettre le hot reload en reliant le répertoire './api-gateway' sur l'hôte au répertoire '/api' dans le conteneur.
+    depends_on:
+      - auth
+      # Déclare que ce service dépend du service 'auth'. Le service 'auth' sera démarré avant le service 'api'.
+
+  # Configuration du service 'auth'
+  auth:
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+      # Construit l'image du service à partir du Dockerfile situé dans le répertoire './auth'.
+    container_name: auth
+    # Donne un nom personnalisé au conteneur pour référencer facilement.
+    volumes:
+      - /auth/node_modules
+        # Crée un volume pour préserver les dépendances Node.js entre les redémarrages du conteneur.
+      - ./auth:/auth
+        # Montage d'un volume pour permettre le hot reload en reliant le répertoire './auth' sur l'hôte au répertoire '/auth' dans le conteneur.
+
+  # Configuration du service 'mongodb'
+  mongodb:
+    image: mongo:latest
+    # Utilise l'image Docker officielle de la dernière version de MongoDB depuis le hub Docker.
+    container_name: mongodb
+    # Donne un nom personnalisé au conteneur pour référencer facilement.
+    restart: always
+    # Redémarre automatiquement le conteneur en cas d'échec.
+    ports:
+      - 27017:27017
+      # Mappe le port 27017 du conteneur sur le port 27017 de l'hôte.
+    volumes:
+      - mongodb_data:/data/db
+      # Crée un volume pour le répertoire '/data/db' dans le conteneur, utilisé pour stocker les données MongoDB.
+
+volumes:
+  mongodb_data:
+  # Crée un volume nommé 'mongodb_data' pour stocker les données de MongoDB persistantes entre les redémarrages des conteneurs.
